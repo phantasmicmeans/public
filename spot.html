@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Curated Spots</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Noto+Serif+KR:wght@400;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f6f1eb;
+    --bg-card: #fffcf8;
+    --text: #2c2420;
+    --text-muted: #8a7e76;
+    --accent: #c4654a;
+    --accent-soft: #e8a090;
+    --divider: #e0d6cc;
+    --tag-bg: #ede6dd;
+    --shadow: 0 2px 20px rgba(44, 36, 32, 0.06);
+    --shadow-hover: 0 8px 40px rgba(44, 36, 32, 0.12);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', 'Noto Serif KR', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  /* ---- grain overlay ---- */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.025;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 180px;
+    z-index: 9999;
+  }
+
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ---- sections ---- */
+  .section {
+    max-width: 820px;
+    margin: 0 auto;
+    padding: 4rem 2rem 6rem;
+  }
+
+  .section-header {
+    display: flex;
+    align-items: baseline;
+    gap: 1rem;
+    margin-bottom: 3rem;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .section-header.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .section-number {
+    font-family: 'Playfair Display', serif;
+    font-size: 4.5rem;
+    font-weight: 400;
+    color: var(--accent-soft);
+    line-height: 1;
+    letter-spacing: -0.03em;
+  }
+
+  .section-title-group {
+    border-left: 1px solid var(--divider);
+    padding-left: 1rem;
+  }
+
+  .section-title {
+    font-family: 'Noto Serif KR', serif;
+    font-size: 1.6rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+
+  .section-subtitle {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-top: 0.25rem;
+    font-weight: 400;
+  }
+
+  /* ---- cards ---- */
+  .cards {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .card {
+    background: var(--bg-card);
+    border-radius: 16px;
+    padding: 2rem 2.2rem;
+    box-shadow: var(--shadow);
+    position: relative;
+    overflow: hidden;
+    transition: all 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+    opacity: 0;
+    transform: translateY(30px);
+    cursor: default;
+  }
+
+  .card.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .card:hover {
+    box-shadow: var(--shadow-hover);
+    transform: translateY(-3px) !important;
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 4px;
+    height: 100%;
+    background: linear-gradient(180deg, var(--accent), var(--accent-soft));
+    border-radius: 4px 0 0 4px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .card:hover::before {
+    opacity: 1;
+  }
+
+  .card-index {
+    position: absolute;
+    top: 1.8rem; right: 2rem;
+    font-family: 'Playfair Display', serif;
+    font-size: 2.8rem;
+    font-weight: 400;
+    color: var(--bg);
+    line-height: 1;
+    user-select: none;
+    text-shadow:
+      -1px -1px 0 var(--divider),
+       1px -1px 0 var(--divider),
+      -1px  1px 0 var(--divider),
+       1px  1px 0 var(--divider);
+  }
+
+  .card-name {
+    font-family: 'Noto Serif KR', serif;
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin-bottom: 0.35rem;
+    letter-spacing: -0.01em;
+  }
+
+  .card-location {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+    font-weight: 500;
+  }
+
+  .card-desc {
+    font-size: 0.95rem;
+    line-height: 1.7;
+    color: #5a504a;
+    margin-bottom: 1.2rem;
+    font-weight: 300;
+  }
+
+  .tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1.2rem;
+  }
+
+  .tag {
+    background: var(--tag-bg);
+    color: var(--text-muted);
+    font-size: 0.72rem;
+    padding: 0.3em 0.8em;
+    border-radius: 100px;
+    letter-spacing: 0.04em;
+    font-weight: 500;
+  }
+
+  .tag.highlight {
+    background: var(--accent);
+    color: #fff;
+  }
+
+  .card-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.82rem;
+    color: var(--accent);
+    text-decoration: none;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    transition: gap 0.3s ease;
+  }
+
+  .card-link:hover {
+    gap: 0.7rem;
+  }
+
+  .card-link svg {
+    width: 14px; height: 14px;
+    transition: transform 0.3s ease;
+  }
+
+  .card-link:hover svg {
+    transform: translateX(2px);
+  }
+
+  .card-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  /* ---- divider ---- */
+  .section-divider {
+    max-width: 820px;
+    margin: 0 auto;
+    padding: 0 2rem;
+  }
+
+  .section-divider hr {
+    border: none;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--divider), transparent);
+  }
+
+  /* ---- footer ---- */
+  .footer {
+    text-align: center;
+    padding: 3rem 2rem 4rem;
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .footer .dot {
+    display: inline-block;
+    width: 4px; height: 4px;
+    background: var(--accent-soft);
+    border-radius: 50%;
+    vertical-align: middle;
+    margin: 0 0.8rem;
+  }
+
+  /* ---- responsive ---- */
+  @media (max-width: 600px) {
+    .hero-title { font-size: clamp(2.4rem, 10vw, 3.5rem); }
+    .section { padding: 3rem 1.2rem 4rem; }
+    .card { padding: 1.5rem 1.4rem; }
+    .section-number { font-size: 3rem; }
+    .section-title { font-size: 1.3rem; }
+    .card-index { font-size: 2rem; top: 1.4rem; right: 1.4rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Section 1: Seoul / Pangyo -->
+<section class="section">
+  <div class="section-header" data-reveal>
+    <span class="section-number">01</span>
+    <div class="section-title-group">
+      <h2 class="section-title">서울 / 판교</h2>
+      <p class="section-subtitle">Dining &amp; Drinks</p>
+    </div>
+  </div>
+
+  <div class="cards">
+    <!-- Acid House -->
+    <article class="card" data-reveal>
+      <span class="card-index">01</span>
+      <h3 class="card-name">애시드하우스</h3>
+      <p class="card-location">신사</p>
+      <p class="card-desc">
+        북유럽 감성이 묻어나는 내추럴 와인바.<br>
+        부담 없이 글라스로 한 잔, 분위기에 취하는 곳.
+      </p>
+      <div class="tags">
+        <span class="tag">내추럴 와인</span>
+        <span class="tag">글라스 가능</span>
+        <span class="tag highlight">북유럽 무드</span>
+      </div>
+      <a class="card-link" href="https://app.catchtable.co.kr/ct/shop/acidhouseseoul?from=share&type=DINING" target="_blank" rel="noopener">
+        캐치테이블에서 보기
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+      </a>
+    </article>
+
+    <!-- Fosaro -->
+    <article class="card" data-reveal>
+      <span class="card-index">02</span>
+      <h3 class="card-name">포사로</h3>
+      <p class="card-location">가로수길</p>
+      <p class="card-desc">
+        모던하게 재해석한 이자카야.<br>
+        환승연애 촬영지로도 알려진, 무드 있는 공간.
+      </p>
+      <div class="tags">
+        <span class="tag">모던 이자카야</span>
+        <span class="tag highlight">환승연애 촬영지</span>
+        <span class="tag">가로수길</span>
+      </div>
+      <a class="card-link" href="https://app.catchtable.co.kr/ct/shop/fosaro?from=share&type=DINING" target="_blank" rel="noopener">
+        캐치테이블에서 보기
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+      </a>
+    </article>
+
+    <!-- Moktanjang -->
+    <article class="card" data-reveal>
+      <span class="card-index">03</span>
+      <h3 class="card-name">목탄장</h3>
+      <p class="card-location">판교</p>
+      <p class="card-desc">
+        숯불 그릴과 파스타의 의외의 조합.<br>
+        와인 가져가면 콜키지로 즐기는 재미.
+      </p>
+      <div class="tags">
+        <span class="tag">숯불 그릴</span>
+        <span class="tag">파스타</span>
+        <span class="tag highlight">콜키지 필수</span>
+      </div>
+      <a class="card-link" href="https://app.catchtable.co.kr/ct/shop/moktanjang_pangyo?from=share&type=DINING" target="_blank" rel="noopener">
+        캐치테이블에서 보기
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+      </a>
+    </article>
+  </div>
+</section>
+
+<div class="section-divider"><hr></div>
+
+<!-- Section 2: Yangpyeong -->
+<section class="section">
+  <div class="section-header" data-reveal>
+    <span class="section-number">02</span>
+    <div class="section-title-group">
+      <h2 class="section-title">양평 나들이 코스</h2>
+      <p class="section-subtitle">Day Trip</p>
+    </div>
+  </div>
+
+  <div class="cards">
+    <!-- Pickup -->
+    <article class="card" data-reveal>
+      <span class="card-index">01</span>
+      <h3 class="card-name">강남 근처 픽업</h3>
+      <p class="card-location">강남</p>
+      <p class="card-desc">
+        오후 3시, 강남 근처에서 픽업 후 양평으로 출발.<br>
+        주말 기준 약 1시간~1시간 반 소요.
+      </p>
+      <div class="tags">
+        <span class="tag highlight">PM 3:00</span>
+        <span class="tag">픽업</span>
+        <span class="tag">양평 방면</span>
+      </div>
+    </article>
+
+    <!-- Modern Cloister -->
+    <article class="card" data-reveal>
+      <span class="card-index">02</span>
+      <h3 class="card-name">모던 클로이스터</h3>
+      <p class="card-location">양평</p>
+      <p class="card-desc">
+        스피커 빵빵한 음악 감상 카페.<br>
+        신청곡도 가능 — 좋아하는 노래를 공간 가득 채우는 경험.
+      </p>
+      <div class="tags">
+        <span class="tag highlight">신청곡 가능</span>
+        <span class="tag">음악 감상</span>
+        <span class="tag">카페</span>
+      </div>
+      <div class="card-links">
+        <a class="card-link" href="https://naver.me/xnh0KMge" target="_blank" rel="noopener">
+          네이버 지도
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+        </a>
+        <a class="card-link" href="https://blog.naver.com/dazzling0205/224061784869" target="_blank" rel="noopener">
+          블로그 후기
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+        </a>
+      </div>
+    </article>
+
+    <!-- Dinner -->
+    <article class="card" data-reveal>
+      <span class="card-index">03</span>
+      <h3 class="card-name">저녁 — 닭갈비 &amp; 막국수</h3>
+      <p class="card-location">양평</p>
+      <p class="card-desc">
+        나들이의 마무리는 역시 든든한 한 끼.<br>
+        닭갈비에 막국수까지, 양평의 정석 코스.
+      </p>
+      <div class="tags">
+        <span class="tag">닭갈비</span>
+        <span class="tag">막국수</span>
+        <span class="tag highlight">마무리 필수</span>
+      </div>
+    </article>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer class="footer">
+  Curated with care <span class="dot"></span> 2026
+</footer>
+
+<script>
+  // Intersection Observer for reveal animations
+  const reveals = document.querySelectorAll('[data-reveal]');
+  let delay = 0;
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry, i) => {
+      if (entry.isIntersecting) {
+        const el = entry.target;
+        const siblings = el.parentElement.querySelectorAll('[data-reveal]');
+        const idx = Array.from(siblings).indexOf(el);
+        const stagger = el.classList.contains('card') ? idx * 120 : 0;
+
+        setTimeout(() => {
+          el.classList.add('visible');
+        }, stagger);
+
+        observer.unobserve(el);
+      }
+    });
+  }, { threshold: 0.15 });
+
+  reveals.forEach(el => observer.observe(el));
+</script>
+</body>
+</html>
